@@ -1,0 +1,22 @@
+﻿  Converter.cpp
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(52,13): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(84,8): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(85,8): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(90,27): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(93,39): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(95,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(97,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(103,55): warning C4244: 'argument': conversion from 'float' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=uchar
+          ]
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(103,48): warning C4244: 'argument': conversion from 'float' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=uchar
+          ]
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(134,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(135,45): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(138,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\DELL\Desktop\Digital-Image-Processing\18120468_18120474_18120438_18120466_18120389_Lab1_Lab2\Lab1\Converter.cpp(139,45): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
