@@ -1,7 +1,7 @@
 ﻿#include "Converter.h"
 
 
-//Hoài Nam
+
 int Converter::RGB2GrayScale(const Mat& sourceImage, Mat& destinationImage)
 {
 	if (sourceImage.data == NULL || sourceImage.rows <= 0 || sourceImage.cols <= 0)
@@ -32,7 +32,7 @@ int Converter::RGB2GrayScale(const Mat& sourceImage, Mat& destinationImage)
 	return 1;
 }
 
-//Hoài Nam
+
 int Converter::GrayScale2RGB(const Mat& sourceImage, Mat& destinationImage)
 {
 	if (!sourceImage.data)
@@ -59,7 +59,7 @@ int Converter::GrayScale2RGB(const Mat& sourceImage, Mat& destinationImage)
 }
 
 
-//Hoài Nam
+
 int Converter::RGB2HSV(const Mat& sourceImage, Mat& destinationImage)
 {
 	destinationImage.create(sourceImage.size(), CV_8UC3);

@@ -1,5 +1,10 @@
 ﻿#include "GeometricTransformer.h"
 
+int GeometricTransformer::Transform(const Mat& beforeImage, Mat& afterImage, AffineTransform* transformer, PixelInterpolate* interpolator)
+{
+	return 0;
+}
+
 int GeometricTransformer::RotateKeepImage(const Mat& srcImage, Mat& dstImage, float angle, PixelInterpolate* interpolator)
 {
 	if (!srcImage.data) return 0;
@@ -131,7 +136,7 @@ int GeometricTransformer::Scale(const Mat& srcImage, Mat& dstImage, float sx, fl
 	//Pos.release();
 
 	//// Trả về giá trị 0 sau khi scale thành công
-	//return 0;
+	return 0;
 }
 
 int GeometricTransformer::Resize(const Mat& srcImage, Mat& dstImage, int newWidth, int newHeight, PixelInterpolate* interpolator)
@@ -225,6 +230,11 @@ GeometricTransformer::~GeometricTransformer()
 {
 }
 
+uchar NearestNeighborInterpolate::Interpolate(float tx, float ty, uchar* pSrc, int srcWidthStep, int nChannels)
+{
+	return uchar();
+}
+
 NearestNeighborInterpolate::NearestNeighborInterpolate()
 {
 }
@@ -242,6 +252,11 @@ PixelInterpolate::~PixelInterpolate()
 }
 
 
+uchar BilinearInterpolate::Interpolate(float tx, float ty, uchar* pSrc, int srcWidthStep, int nChannels)
+{
+	return uchar();
+}
+
 BilinearInterpolate::BilinearInterpolate()
 {
 }
@@ -257,6 +272,7 @@ void AffineTransform::Translate(float dx, float dy)
 					, {0, 0, 1} };
 	Mat matTranslate = Mat(3, 3, CV_32FC1, value);
 	this->_matrixTransform = matTranslate * this->_matrixTransform;
+
 }
 
 void AffineTransform::Rotate(float angle)

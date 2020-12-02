@@ -23,8 +23,7 @@ public:
 	Trả về
 		- Giá trị màu được nội suy
 	*/
-	virtual uchar Interpolate(
-		float tx, float ty, uchar* pSrc, int srcWidthStep, int nChannels) = 0;
+	virtual uchar Interpolate(float tx, float ty, uchar* pSrc, int srcWidthStep, int nChannels) = 0;
 	PixelInterpolate();
 	~PixelInterpolate();
 };

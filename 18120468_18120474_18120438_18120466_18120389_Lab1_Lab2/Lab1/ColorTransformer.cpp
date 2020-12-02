@@ -1,7 +1,7 @@
 ﻿#include "ColorTransformer.h"
 
 
-//Trung Nam
+
 int ColorTransformer::ChangeBrighness(const Mat& sourceImage, Mat& destinationImage, short b)
 {
 	if (sourceImage.data) {
@@ -194,89 +194,81 @@ int ColorTransformer::CalcHistogram(const Mat& sourceImage, Mat& histMatrix)
 
 int ColorTransformer::HistogramEqualization(const Mat& sourceImage, Mat& destinationImage)
 {
-	int** hist;
-	int row = sourceImage.rows;
-	int col = sourceImage.cols;
-	int nChannel = sourceImage.channels();
-	int temp;
+	cv::Mat img = sourceImage.clone();
+	destinationImage = Mat(sourceImage.rows, sourceImage.cols, (sourceImage.channels() == 3) ? CV_8UC3 : CV_8UC1);
 
-	sourceImage.copyTo(destinationImage);
-	destinationImage.setTo(0);
+	int offset = sourceImage.step[0];
+	int nChannels = sourceImage.step[1];
+	int total = img.rows * img.cols;
 
-	hist = (int**)calloc(nChannel, sizeof(int*));
-	for (int i = 0; i < nChannel; i++)
-	{
-		hist[i] = (int*)calloc(256, sizeof(int));
+	//Step 1: Probability Mass Function (PMF): Calc Frequence
+	float prob[256] = { 0 };
+	int count[256] = { 0 };
 
-		memset(hist[i], 0, 256 * sizeof(int));
-	} // Tạo mảng chứa ma trận Histogram với chiều rộng là 256
-
-
-	for (int i = 0; i < row; i++)
-	{
-		const uchar* pRow = sourceImage.ptr<uchar>(i);
-		for (int j = 0; j < col; j++, pRow += nChannel)
-		{
-			for (int o = 0; o < nChannel; o++)
-			{
-				for (int u = 1; u <= 255; u++)
-				{
-					if (pRow[o] < u) // Kiểm tra xem giá trị màu tại vị trí (i,j) của kênh màu thứ o có nằm trong khoảng bin của histogram không 
-					{
-						hist[o][u - 1]++; // Tăng số lần xuất hiện nếu giá trị màu nằm trong khoảng bin nhất định của histogram
-						break;
-					}
-				}
-			}
-
+	uchar* pSourceImage = (uchar*)sourceImage.data;
+	for (int x = 0; x < sourceImage.rows; x++, pSourceImage += offset) {
+		uchar* pRowSourceImage = pSourceImage;
+		for (int y = 0; y < sourceImage.cols; y++, pRowSourceImage += nChannels) {
+			count[pRowSourceImage[2]]++;
 		}
 	}
-	// Tính histogram của ảnh
+	for (int level = 0; level < 256; level++)
+		prob[level] = count[level] * 1.0f / total;
 
-	double** p = NULL;
-	p = (double**)calloc(nChannel, sizeof(double*));
-	for (int i = 0; i < nChannel; i++)
-	{
-		p[i] = (double*)calloc(256, sizeof(double));
-	} // Khai báo ma mảng chứa xác suất của từng bin trong histogram
+	//Step 2: Cumulative Distributive Function (CDF)
+	float cdf[256] = { 0 };
+	cdf[0] = prob[0];
+	for (int level = 1; level < 256; level++)
+		cdf[level] = cdf[level - 1] + prob[level];
 
+	//Step 3: Multiple
+	int newLevel[256] = { 0 };
+	for (int level = 0; level < 256; level++)
+		newLevel[level] = (int)(255 * cdf[level]);
 
-	for (int i = 0; i < nChannel; i++)
-	{
-		for (int j = 0; j < 256; j++)
-		{
-			p[i][j] = double(hist[i][j]) / double((col * row));
-		}
-	} // Tính xác suất của các bin trong histogram
-
-	for (int i = 0; i < row; i++)
-	{
-		const uchar* pRow = sourceImage.ptr<uchar>(i);
-		for (int j = 0; j < col; j++, pRow += nChannel)
-		{
-			for (int o = 0; o < nChannel; o++)
-			{
-				uchar* p2 = destinationImage.ptr<uchar>(i, j);
-				for (int u = 0; u <= 255; u++)
-				{
-					temp = p2[o] + floor(p[o][u] * 255.0);
-					p2[o] += floor(p[o][u] * 255.0);
-					if (temp > 255)
-					{
-						p2[o] = 255;
-						break;
-					}
-
-					if (pRow[o] < u)
-					{
-						break;
-					}
-				}
+	//Step 4: Mapping
+	pSourceImage = (uchar*)sourceImage.data;
+	uchar* pDestinationImage = (uchar*)destinationImage.data;
+	for (int x = 0; x < sourceImage.rows; x++, pSourceImage += offset, pDestinationImage += offset) {
+		uchar* pRowSourceImage = pSourceImage;
+		uchar* pRowDestinationImage = pDestinationImage;
+		for (int y = 0; y < sourceImage.cols; y++, pRowSourceImage += nChannels, pRowDestinationImage += nChannels) {
+			// Update value for each channel
+			for (int channel = 0; channel < nChannels; channel++) {
+				pRowDestinationImage[channel] = newLevel[pRowSourceImage[channel]];
 			}
-
 		}
 	}
-	return 0;
+	return 1;
+
+	//if (sourceImage.empty()) return 0;
+
+	//const uchar nchannel = sourceImage.channels();
+	//cv::Mat img = sourceImage.clone(), hist;
+
+	////Convert source image from BGR to HSV
+	//Converter cvt;
+	//if (nchannel != 1) cvt.Convert(img, img, 2);
+	//CalcHistogram(img, hist);
+
+	//for (int bin = 1; bin < hist.cols; bin++)
+	//	hist.at<signed>(2, bin) += hist.at<signed>(2, bin - 1);
+
+	//// Normalize to [0-255]
+	//for (int bin = 0; bin < hist.cols; bin++)
+	//	hist.at<signed>(2, bin) = (255.0 / (sourceImage.rows * sourceImage.cols)) * hist.at<signed>(2, bin) + 0.5;
+
+	////Update to image
+	//for (int y = 0; y < img.rows; y++)
+	//	for (int x = 0; x < img.cols; x++)
+	//		img.at<cv::Vec3b>(y, x)[nchannel - 1] = hist.at<signed>(2, img.at<cv::Vec3b>(y, x)[nchannel - 1]);
+
+	////Convert back to BGR for display
+	//if (nchannel != 1) cvt.Convert(img, destinationImage, 3);
+	//else destinationImage = img.clone();
+
+	//return 1;
+
 }
 
 int ColorTransformer::DrawHistogram(const Mat& histMatrix, Mat& histImage)
