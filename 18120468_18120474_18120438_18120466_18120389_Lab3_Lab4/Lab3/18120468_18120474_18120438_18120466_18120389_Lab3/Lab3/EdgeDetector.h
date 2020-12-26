@@ -1,4 +1,11 @@
 ﻿#pragma once
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
+#include <vector>
+#include <iostream>
+using namespace std;
+using namespace cv;
+
 class EdgeDetector
 {
 public:

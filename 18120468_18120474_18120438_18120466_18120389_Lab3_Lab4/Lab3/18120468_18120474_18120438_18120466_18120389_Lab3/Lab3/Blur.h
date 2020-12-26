@@ -1,4 +1,11 @@
 ﻿#pragma once
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
+#include <math.h>
+#include <iostream>
+using namespace std;
+using namespace cv;
+
 class Blur
 {
 public:
