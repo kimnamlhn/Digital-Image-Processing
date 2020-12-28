@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-
+#ham tim duong vien
 def mapp(h):
     h = h.reshape((4, 2))
     hnew = np.zeros((4, 2), dtype=np.float32)
@@ -17,25 +17,30 @@ def mapp(h):
     return hnew
 
 
-image = cv2.imread("img.jpg")  # read in the image
-image = cv2.resize(image, (800, 600))  # resizing because opencv does not work well with bigger images
+#doc anh vao va resize anh
+image = cv2.imread("img.jpg")
+image = cv2.resize(image, (800, 600))
+#show anh goc
+cv2.imshow("Source Image", image)
+#tao ban sao
 orig = image.copy()
 
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # RGB To Gray Scale
-cv2.imshow("Title", gray)
+#chuyen anh sang gray scale
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+#blur
 blurred = cv2.GaussianBlur(gray, (5, 5),
-                           0)  # (5,5) is the kernel size and 0 is sigma that determines the amount of blur
-cv2.imshow("Blur", blurred)
+                           0)
+#canny
+edged = cv2.Canny(blurred, 30, 50)
 
-edged = cv2.Canny(blurred, 30, 50)  # 30 MinThreshold and 50 is the MaxThreshold
-cv2.imshow("Canny", edged)
 
+# truy xuat cac duong vien
 contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST,
-                                       cv2.CHAIN_APPROX_SIMPLE)  # retrieve the contours as a list, with simple apprximation model
+                                       cv2.CHAIN_APPROX_SIMPLE)
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-# the loop extracts the boundary contours of the page
+# Lap tim cac duong vien cua hinh anh
 for c in contours:
     p = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, 0.02 * p, True)
@@ -43,15 +48,17 @@ for c in contours:
     if len(approx) == 4:
         target = approx
         break
-approx = mapp(target)  # find endpoints of the sheet
+approx = mapp(target)  # tim di vien cua to giay
 
-pts = np.float32([[0, 0], [800, 0], [800, 800], [0, 800]])  # map to 800*800 target window
+pts = np.float32([[0, 0], [800, 0], [800, 800], [0, 800]])  # cua so anh 800*800
 
-op = cv2.getPerspectiveTransform(approx, pts)  # get the top or bird eye view effect
+op = cv2.getPerspectiveTransform(approx, pts)
 dst = cv2.warpPerspective(orig, op, (800, 800))
 
-cv2.imshow("Scanned", dst)
-# press q or Esc to close
+#show anh sau xu ly
+cv2.imshow("Destination Image", dst)
+
+# man hinh cho de so sanh 2 anh src va des
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 

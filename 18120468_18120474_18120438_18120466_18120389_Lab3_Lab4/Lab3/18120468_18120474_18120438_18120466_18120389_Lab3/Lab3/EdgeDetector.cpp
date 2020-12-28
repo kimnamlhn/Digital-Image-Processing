@@ -11,12 +11,13 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 	float eps = 1e-6;
 
 	switch (method) {
+	//sobel
 	case 1: {
 		float threshold = 25;
 
-		Mat sourceClone = sourceImage.clone(); // Get a clone of sourceImage
+		Mat sourceClone = sourceImage.clone(); // tao ban sao
 		destinationImage = Mat(rows - kHeight + 1, cols - kWidth + 1, CV_32FC1, Scalar(0));
-		cout << "Sobel Method \n";
+
 		vector <float> Wx = { -1 , 0, 1, -2, 0, 2, -1, 0, 1 };
 		vector <float> Wy = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
 		for (int i = 0; i < Wx.size(); i++) {
@@ -30,8 +31,8 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 		ConvoY.SetKernel(Wy, 3, 3);
 		ConvoX.DoConvolution(sourceClone, Gx);
 		ConvoY.DoConvolution(sourceClone, Gy);
-		//imshow("Show Image", Gx);
-		//imshow("Show Image", Gy);
+
+
 		for (int i = 0; i < destinationImage.rows; i++)
 			for (int j = 0; j < destinationImage.cols; j++) {
 				float fx = Gx.ptr<float>(i)[j];
@@ -43,8 +44,9 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 			}
 	}
 		  break;
+	//prewitt
 	case 2: {
-		cout << "Prewitt Method \n";
+
 		float threshold = 50;
 
 		Convolution ConvOx, ConvOy;
@@ -79,19 +81,19 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 		fy.release();
 	}
 		  break;
+	//laplace
 	case 3: {
 		try {
-			// Tạo mask
 			vector<float> laplace = { 1, 1, 1, 1, -8, 1, 1, 1, 1 };
 			Mat destinationImageCopied = Mat(rows, cols, CV_32FC1);
 
-			// Tính tích chập
+			// tinh chap
 			Convolution Laplace;
 			Laplace.SetKernel(laplace, 3, 3);
-			// Nếu không tính được tích chập thì fail
+			// kiem tra dieu kien
 			if (Laplace.DoConvolution(sourceImage, destinationImageCopied) == 1) return 1;
 
-			// Tính threshold
+			// tinh threshold
 			float threshold = -1.0 * INT_MAX;
 			destinationImage = Mat::zeros(rows, cols, CV_8UC1);
 			for (int x = 0; x < destinationImageCopied.rows; x++) {
@@ -100,15 +102,10 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 					threshold = value > threshold ? value : threshold;
 				}
 			}
-			// Threshold sẽ bằng 1/4 giá trị max
 			threshold = threshold > 255 ? 255 : threshold;
 			threshold = threshold * 25 / 100.0;
 
-			/* Tính zero crossing
-			   Xét 4 trường hợp đối nhau: trên-dưới, trái-phải và 2 đường chéo
-			   Nếu dấu khác nhau và độ chênh lệch giữa 2 giá trị > threshold thì chọn
-			   Nếu có >= 2 chọn thì đó là điểm zero crossing
-			*/
+			//tinh zero crossing
 			int dx[] = { -1, 1, 0, -1 };
 			int dy[] = { -1, -1, 1, 0 };
 			for (int x = 1; x < destinationImageCopied.rows - 1; x++) {
@@ -123,12 +120,11 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 							count++;
 						}
 					}
-					// Đánh dấu là điểm zero crossing
+					// diem zero crossing
 					if (count >= 2) destinationImage.at<uchar>(x, y) = 255;
 				}
 			}
-			//imshow("Destination Image with Laplace", destinationImage);
-			//waitKey(0);
+
 
 		}
 		catch (exception& e) {
