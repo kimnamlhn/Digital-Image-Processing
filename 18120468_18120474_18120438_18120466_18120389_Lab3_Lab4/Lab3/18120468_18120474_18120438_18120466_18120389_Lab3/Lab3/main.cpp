@@ -11,16 +11,6 @@ using namespace cv;
 
 int main(int argc, char* argv[])
 {
-#pragma region ONLY_FOR_DEBUG
-	argc = 5;
-	char* temp[5];
-	temp[0] = _strdup("main.exe");
-	temp[1] = _strdup("--laplace");
-	temp[2] = _strdup("girl_gray.png");
-	temp[3] = _strdup("3");
-	temp[4] = _strdup("3");
-	argv = temp;
-#pragma endregion
 
 	if (argc < 3) {
 		cout << "Error arguments";
@@ -113,14 +103,6 @@ int main(int argc, char* argv[])
 		waitKey(0);
 		return 0;
 	}
-
-#pragma region ONLY_FOR_DEBUG
-	free(temp[0]);
-	free(temp[1]);
-	free(temp[2]);
-	free(temp[3]);
-	free(temp[4]);
-#pragma endregion
 
 	waitKey(0);
 	return 0;
