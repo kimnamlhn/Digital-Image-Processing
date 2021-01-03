@@ -3,19 +3,28 @@
 
 int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int kWidth, int kHeight, int method)
 {
+	// số hàng số cột
 	int rows = sourceImage.rows;
 	int cols = sourceImage.cols;
-	int channels = sourceImage.channels();
 
-	if (channels != 1) return 1;
+	// số kênh màu
+	int nChannels = sourceImage.channels();
+
+	//kiểm tra số kênh màu
+	if (nChannels != 1) return 1;
+
+	// con số để xác định có quá nhỏ để bỏ qua k
 	float eps = 1e-6;
 
+
+	// switch cho 3 trường hợp sobel, prewitt, laplace
 	switch (method) {
 	//sobel
 	case 1: {
+		//khai báo
 		float threshold = 25;
-
-		Mat sourceClone = sourceImage.clone(); // tao ban sao
+		// tạo bản sao
+		Mat cloneImage = sourceImage.clone(); 
 		destinationImage = Mat(rows - kHeight + 1, cols - kWidth + 1, CV_32FC1, Scalar(0));
 
 		vector <float> Wx = { -1 , 0, 1, -2, 0, 2, -1, 0, 1 };
@@ -24,15 +33,17 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 			Wx[i] *= 1.0 / 4;
 			Wy[i] *= 1.0 / 4;
 		}
+
+		//set và tính chập 
 		Mat Gx;
 		Mat Gy;
 		Convolution ConvoX, ConvoY;
 		ConvoX.SetKernel(Wx, 3, 3);
 		ConvoY.SetKernel(Wy, 3, 3);
-		ConvoX.DoConvolution(sourceClone, Gx);
-		ConvoY.DoConvolution(sourceClone, Gy);
+		ConvoX.DoConvolution(cloneImage, Gx);
+		ConvoY.DoConvolution(cloneImage, Gy);
 
-
+		// set cho ảnh des
 		for (int i = 0; i < destinationImage.rows; i++)
 			for (int j = 0; j < destinationImage.cols; j++) {
 				float fx = Gx.ptr<float>(i)[j];
@@ -47,8 +58,8 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 	//prewitt
 	case 2: {
 
+		//khai báo 
 		float threshold = 50;
-
 		Convolution ConvOx, ConvOy;
 		Mat fx;
 		Mat fy;
@@ -59,12 +70,15 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 			Wx[i] *= 1.0 / 3;
 			Wy[i] *= 1.0 / 3;
 		}
+
+		// tính chập 
 		ConvOx.SetKernel(Wx, kWidth, kHeight);
 		ConvOx.DoConvolution(sourceImage, fx);
 
 		ConvOy.SetKernel(Wy, kWidth, kHeight);
 		ConvOy.DoConvolution(sourceImage, fy);
 
+		//set cho ảnh des
 		destinationImage = Mat(rows - kHeight + 1, cols - kWidth + 1, CV_32FC1, Scalar(0));
 		for (int i = 0; i < destinationImage.rows; i++) {
 			float* DestRow = destinationImage.ptr<float>(i);
@@ -87,13 +101,13 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 			vector<float> laplace = { 1, 1, 1, 1, -8, 1, 1, 1, 1 };
 			Mat destinationImageCopied = Mat(rows, cols, CV_32FC1);
 
-			// tinh chap
+			// tính chập
 			Convolution Laplace;
 			Laplace.SetKernel(laplace, 3, 3);
-			// kiem tra dieu kien
+			// kiểm tra điều kiện
 			if (Laplace.DoConvolution(sourceImage, destinationImageCopied) == 1) return 1;
 
-			// tinh threshold
+			// tính threshold
 			float threshold = -1.0 * INT_MAX;
 			destinationImage = Mat::zeros(rows, cols, CV_8UC1);
 			for (int x = 0; x < destinationImageCopied.rows; x++) {
@@ -105,7 +119,7 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 			threshold = threshold > 255 ? 255 : threshold;
 			threshold = threshold * 25 / 100.0;
 
-			//tinh zero crossing
+			//tính zero crossing
 			int dx[] = { -1, 1, 0, -1 };
 			int dy[] = { -1, -1, 1, 0 };
 			for (int x = 1; x < destinationImageCopied.rows - 1; x++) {
@@ -120,7 +134,7 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 							count++;
 						}
 					}
-					// diem zero crossing
+					// điểm zero crossing
 					if (count >= 2) destinationImage.at<uchar>(x, y) = 255;
 				}
 			}
@@ -138,6 +152,7 @@ int EdgeDetector::DetectEdge(const Mat& sourceImage, Mat& destinationImage, int 
 
 	return 0;
 }
+
 
 EdgeDetector::EdgeDetector()
 {
