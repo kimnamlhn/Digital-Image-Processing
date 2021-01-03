@@ -6,8 +6,6 @@
 
 using namespace cv;
 
-//char command[255];
-//char inputPath[255];
 
 int main(int argc, char* argv[])
 {
