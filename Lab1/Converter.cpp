@@ -120,7 +120,6 @@ Hàm trả về
 0: nếu chuyển thành công
 1: nếu chuyển thất bại (không đọc được ảnh input,...)
 */
-// Phú Hồng
 int Converter::HSV2RGB(const Mat& sourceImage, Mat& destinationImage)
 {
 	// Nếu không đọc được ảnh
