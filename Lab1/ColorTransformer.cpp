@@ -1,6 +1,39 @@
 ﻿#include "ColorTransformer.h"
 
 
+int ColorTransformer::ChangeContrast(const Mat& sourceImage, Mat& destinationImage, float c)
+{
+	if (sourceImage.empty())
+		return 0;
+
+	uchar lookup[256];
+	for (int i = 0; i < 256; i++)
+		lookup[i] = saturate_cast<uchar>(i * c);
+
+	//Khởi tạo ảnh đích có kích thước và type giống ảnh nguồn
+	destinationImage.create(sourceImage.rows, sourceImage.cols, sourceImage.type());
+
+	int width = sourceImage.cols, height = sourceImage.rows;
+	//nChannels là số kênh màu
+	int nChannels = sourceImage.channels();
+	//widthStep là khoảng cách tính theo byte giữa 2 pixel cùng cột trên 2 dòng kế tiếp
+	int widthStep = sourceImage.step[0];
+	//pData là con trỏ quản lý vùng nhớ ảnh
+	uchar* pData = (uchar*)destinationImage.data; //COn tro data cua anh dich
+	uchar* psData = (uchar*)sourceImage.data; //COn tro data cua anh nguon
+	for (int i = 0; i < height; i++, psData += widthStep, pData += widthStep) {
+		uchar* pRow = pData; //Con tro dong cua anh dich
+		uchar* psRow = psData;//Con tro dong cua anh nguon
+		for (int j = 0; j < width; j++, pRow += nChannels, psRow += nChannels) {
+			for (int k = 0; k < nChannels; k++)
+				pRow[k] = lookup[(int)psRow[k]];
+		}
+	}
+	if (destinationImage.empty())
+		return 0; //Loi 
+	return 1;
+}
+
 
 int ColorTransformer::ChangeBrighness(const Mat& sourceImage, Mat& destinationImage, short b)
 {
@@ -36,161 +69,7 @@ int ColorTransformer::ChangeBrighness(const Mat& sourceImage, Mat& destinationIm
 	return 1;
 }
 
-int ColorTransformer::ChangeContrast(const Mat& sourceImage, Mat& destinationImage, float c)
-{
-	if (sourceImage.empty())
-		return 0;
 
-	uchar lookup[256];
-	for (int i = 0; i < 256; i++)
-		lookup[i] = saturate_cast<uchar>(i * c);
-
-	//Khởi tạo ảnh đích có kích thước và type giống ảnh nguồn
-	destinationImage.create(sourceImage.rows, sourceImage.cols, sourceImage.type());
-
-	int width = sourceImage.cols, height = sourceImage.rows;
-	//nChannels là số kênh màu
-	int nChannels = sourceImage.channels();
-	//widthStep là khoảng cách tính theo byte giữa 2 pixel cùng cột trên 2 dòng kế tiếp
-	int widthStep = sourceImage.step[0];
-	//pData là con trỏ quản lý vùng nhớ ảnh
-	uchar* pData = (uchar*)destinationImage.data; //COn tro data cua anh dich
-	uchar* psData = (uchar*)sourceImage.data; //COn tro data cua anh nguon
-	for (int i = 0; i < height; i++, psData += widthStep, pData += widthStep) {
-		uchar* pRow = pData; //Con tro dong cua anh dich
-		uchar* psRow = psData;//Con tro dong cua anh nguon
-		for (int j = 0; j < width; j++, pRow += nChannels, psRow += nChannels) {
-			for (int k = 0; k < nChannels; k++)
-				pRow[k] = lookup[(int)psRow[k]];
-		}
-	}
-	if (destinationImage.empty())
-		return 0; //Loi 
-	return 1;
-}
-
-
-/*
-Hàm tính lược đồ màu tổng quát cho ảnh bất kỳ
-Tham so :
-	sourceImage : ảnh ban đầu
-	histMatrix : ma trận histogram (nChannels x 256), mỗi dòng là 1 mảng 256 phần tử histogram của từng kênh màu
-Hàm trả về:
-	1: Nếu thành công thì trả về matrix kết quả (ảnh gốc vẫn giữ nguyên giá trị)
-	0: Nếu không tính được histogram hoặc ảnh input không tồn tại
-*/
-//Phú Hồng
-int ColorTransformer::CalcHistogram(const Mat& sourceImage, Mat& histMatrix)
-{
-	// Nếu không đọc được ảnh
-	if (sourceImage.data == NULL || sourceImage.rows <= 0 || sourceImage.cols <= 0)
-		return 0;
-
-	// Lấy kích thước ma trận, số kênh
-	int width = sourceImage.cols, height = sourceImage.rows;
-	int srcnChannels = sourceImage.channels();
-
-	// ảnh xám
-	if (srcnChannels == 1)
-	{
-		int histogram[256];
-		for (int i = 0; i < 256; i++)	// khởi tạo histogram
-		{
-			histogram[i] = 0;
-		}
-
-		//truy xuất từng phần tử trong ma trận
-		for (int y = 0; y < height; y++)
-		{
-			const uchar* pSrcRow = sourceImage.ptr<uchar>(y);
-
-			for (int x = 0; x < width; x++, pSrcRow += srcnChannels)
-			{
-				histogram[pSrcRow[0]]++;	// +1 nếu giá trị xuất hiện và lặp lại
-			}
-		}
-
-		// tần suất xuất hiện của các giá trị màu khá lớn nên dùng float mới lưu được
-		histMatrix = Mat(1, 256, CV_32FC1);
-		float* pHistMatrix = histMatrix.ptr<float>(0);		// con trỏ đầu dòng
-
-		//gán từng tần suất xuất hiện màu vào từng phần tử trong ma trận
-		for (int i = 0; i < histMatrix.cols; i++, pHistMatrix += histMatrix.channels())
-		{
-			pHistMatrix[0] = histogram[i];
-		}
-		//pHistMatrix -= 256; // muốn in xem thử thì nhớ trừ 256 để con trỏ về vị trí đầu ma trận
-
-		/*for (int i = 0; i < histMatrix.cols; i++, pHistMatrix += histMatrix.channels())
-		{
-			cout << pHistMatrix[0] << " ";
-		}
-		cout << endl << endl << endl;
-		for (int i = 0; i < 256; i++)
-			cout << histogram[i] << " ";*/
-	}
-
-
-	// ảnh màu RGB
-	else if (srcnChannels == 3)
-	{
-		int histogram[3][256];
-		for (int i = 0; i < 3; i++)			// khởi tạo ma trận histogram
-		{
-			for (int j = 0; j < 256; j++)
-			{
-				histogram[i][j] = 0;
-			}
-		}
-
-		// truy xuất các phần từ trong ma trận
-		for (int y = 0; y < height; y++)
-		{
-			const uchar* pSrcRow = sourceImage.ptr<uchar>(y);
-
-			for (int x = 0; x < width; x++, pSrcRow += srcnChannels)	// +1 nếu giá trị xuất hiện và lặp lại
-			{
-				histogram[0][pSrcRow[0]]++;		// kênh B
-				histogram[1][pSrcRow[1]]++;		// kênh G
-				histogram[2][pSrcRow[2]]++;		// kênh R
-			}
-		}
-
-		// tần suất xuất hiện của các giá trị màu khá lớn nên dùng float mới lưu được
-		histMatrix = Mat(3, 256, CV_32FC1);
-		float* pHistMatrix = histMatrix.ptr<float>(0);	// con trỏ đầu dòng
-
-		//gán từng tần suất xuất hiện màu vào từng phần tử trong ma trận
-		for (int y = 0; y < histMatrix.rows; y++)
-		{
-			for (int x = 0; x < histMatrix.cols; x++, pHistMatrix += histMatrix.channels())
-			{
-				pHistMatrix[0] = histogram[0][x];
-				pHistMatrix[1] = histogram[1][x];
-				pHistMatrix[2] = histogram[2][x];
-			}
-			//pHistMatrix -= 256; // muốn in xem thử thì nhớ trừ 256 để con trỏ về vị trí đầu ma trận
-		}
-		/*for (int y = 0; y < histMatrix.rows; y++)
-		{
-			for (int i = 0; i < histMatrix.cols; i++, pHistMatrix += histMatrix.channels())
-			{
-				cout << pHistMatrix[0] << " ";
-			}
-			cout << endl << endl << endl;
-		}*/
-		/*for (int i = 0; i < 1; i++)
-		{
-			for (int j = 0; j < 256; j++)
-			{
-				cout << histogram[i][j] << " ";
-			}
-		}
-		*/
-	}
-
-	return 1;
-}
 
 int ColorTransformer::HistogramEqualization(const Mat& sourceImage, Mat& destinationImage)
 {
@@ -240,34 +119,6 @@ int ColorTransformer::HistogramEqualization(const Mat& sourceImage, Mat& destina
 		}
 	}
 	return 1;
-
-	//if (sourceImage.empty()) return 0;
-
-	//const uchar nchannel = sourceImage.channels();
-	//cv::Mat img = sourceImage.clone(), hist;
-
-	////Convert source image from BGR to HSV
-	//Converter cvt;
-	//if (nchannel != 1) cvt.Convert(img, img, 2);
-	//CalcHistogram(img, hist);
-
-	//for (int bin = 1; bin < hist.cols; bin++)
-	//	hist.at<signed>(2, bin) += hist.at<signed>(2, bin - 1);
-
-	//// Normalize to [0-255]
-	//for (int bin = 0; bin < hist.cols; bin++)
-	//	hist.at<signed>(2, bin) = (255.0 / (sourceImage.rows * sourceImage.cols)) * hist.at<signed>(2, bin) + 0.5;
-
-	////Update to image
-	//for (int y = 0; y < img.rows; y++)
-	//	for (int x = 0; x < img.cols; x++)
-	//		img.at<cv::Vec3b>(y, x)[nchannel - 1] = hist.at<signed>(2, img.at<cv::Vec3b>(y, x)[nchannel - 1]);
-
-	////Convert back to BGR for display
-	//if (nchannel != 1) cvt.Convert(img, destinationImage, 3);
-	//else destinationImage = img.clone();
-
-	//return 1;
 
 }
 
@@ -381,6 +232,128 @@ float ColorTransformer::CompareImage(const Mat& image1, Mat& image2)
 
 	}
 	return similarity;
+}
+
+
+/*
+Hàm tính lược đồ màu tổng quát cho ảnh bất kỳ
+Tham so :
+	sourceImage : ảnh ban đầu
+	histMatrix : ma trận histogram (nChannels x 256), mỗi dòng là 1 mảng 256 phần tử histogram của từng kênh màu
+Hàm trả về:
+	1: Nếu thành công thì trả về matrix kết quả (ảnh gốc vẫn giữ nguyên giá trị)
+	0: Nếu không tính được histogram hoặc ảnh input không tồn tại
+*/
+int ColorTransformer::CalcHistogram(const Mat& sourceImage, Mat& histMatrix)
+{
+	// Nếu không đọc được ảnh
+	if (sourceImage.data == NULL || sourceImage.rows <= 0 || sourceImage.cols <= 0)
+		return 0;
+
+	// Lấy kích thước ma trận, số kênh
+	int width = sourceImage.cols, height = sourceImage.rows;
+	int srcnChannels = sourceImage.channels();
+
+	// ảnh xám
+	if (srcnChannels == 1)
+	{
+		int histogram[256];
+		for (int i = 0; i < 256; i++)	// khởi tạo histogram
+		{
+			histogram[i] = 0;
+		}
+
+		//truy xuất từng phần tử trong ma trận
+		for (int y = 0; y < height; y++)
+		{
+			const uchar* pSrcRow = sourceImage.ptr<uchar>(y);
+
+			for (int x = 0; x < width; x++, pSrcRow += srcnChannels)
+			{
+				histogram[pSrcRow[0]]++;	// +1 nếu giá trị xuất hiện và lặp lại
+			}
+		}
+
+		// tần suất xuất hiện của các giá trị màu khá lớn nên dùng float mới lưu được
+		histMatrix = Mat(1, 256, CV_32FC1);
+		float* pHistMatrix = histMatrix.ptr<float>(0);		// con trỏ đầu dòng
+
+		//gán từng tần suất xuất hiện màu vào từng phần tử trong ma trận
+		for (int i = 0; i < histMatrix.cols; i++, pHistMatrix += histMatrix.channels())
+		{
+			pHistMatrix[0] = histogram[i];
+		}
+		//pHistMatrix -= 256; // muốn in xem thử thì nhớ trừ 256 để con trỏ về vị trí đầu ma trận
+
+		/*for (int i = 0; i < histMatrix.cols; i++, pHistMatrix += histMatrix.channels())
+		{
+			cout << pHistMatrix[0] << " ";
+		}
+		cout << endl << endl << endl;
+		for (int i = 0; i < 256; i++)
+			cout << histogram[i] << " ";*/
+	}
+
+
+	// ảnh màu RGB
+	else if (srcnChannels == 3)
+	{
+		int histogram[3][256];
+		for (int i = 0; i < 3; i++)			// khởi tạo ma trận histogram
+		{
+			for (int j = 0; j < 256; j++)
+			{
+				histogram[i][j] = 0;
+			}
+		}
+
+		// truy xuất các phần từ trong ma trận
+		for (int y = 0; y < height; y++)
+		{
+			const uchar* pSrcRow = sourceImage.ptr<uchar>(y);
+
+			for (int x = 0; x < width; x++, pSrcRow += srcnChannels)	// +1 nếu giá trị xuất hiện và lặp lại
+			{
+				histogram[0][pSrcRow[0]]++;		// kênh B
+				histogram[1][pSrcRow[1]]++;		// kênh G
+				histogram[2][pSrcRow[2]]++;		// kênh R
+			}
+		}
+
+		// tần suất xuất hiện của các giá trị màu khá lớn nên dùng float mới lưu được
+		histMatrix = Mat(3, 256, CV_32FC1);
+		float* pHistMatrix = histMatrix.ptr<float>(0);	// con trỏ đầu dòng
+
+		//gán từng tần suất xuất hiện màu vào từng phần tử trong ma trận
+		for (int y = 0; y < histMatrix.rows; y++)
+		{
+			for (int x = 0; x < histMatrix.cols; x++, pHistMatrix += histMatrix.channels())
+			{
+				pHistMatrix[0] = histogram[0][x];
+				pHistMatrix[1] = histogram[1][x];
+				pHistMatrix[2] = histogram[2][x];
+			}
+			//pHistMatrix -= 256; // muốn in xem thử thì nhớ trừ 256 để con trỏ về vị trí đầu ma trận
+		}
+		/*for (int y = 0; y < histMatrix.rows; y++)
+		{
+			for (int i = 0; i < histMatrix.cols; i++, pHistMatrix += histMatrix.channels())
+			{
+				cout << pHistMatrix[0] << " ";
+			}
+			cout << endl << endl << endl;
+		}*/
+		/*for (int i = 0; i < 1; i++)
+		{
+			for (int j = 0; j < 256; j++)
+			{
+				cout << histogram[i][j] << " ";
+			}
+		}
+		*/
+	}
+
+	return 1;
 }
 
 ColorTransformer::ColorTransformer()
